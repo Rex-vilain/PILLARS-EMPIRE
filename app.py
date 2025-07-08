@@ -158,30 +158,51 @@ if app_mode == "Data Entry":
     if "prices" not in st.session_state:
         st.session_state.prices = load_prices()
 
-    #Stock Sheet 
-    st.header("Stock Sheet")
-    stock_data = []
-    for item in ITEMS:
-        col1, col2, col3, col4, col5 = st.columns(5)
-        with col1:
-            opening = st.number_input(f"{item} - Opening Stock", min_value=0, value=0, key=f"{item}_opening")
-        with col2:
-            purchases = st.number_input(f"{item} - Purchases", min_value=0, value=0, key=f"{item}_purchases")
-        with col3:
-            closing = st.number_input(f"{item} - Closing Stock", min_value=0, value=0, key=f"{item}_closing")
-        with col4:
-            price = st.number_input(f"{item} - Price per Item", min_value=0.0, value=st.session_state.prices.get(item, 0.0), key=f"{item}_price")
-            st.session_state.prices[item] = price
-        sales = opening + purchases - closing
-        amount = sales * price
-        with col5:
-            st.write(f"Sales: {sales}")
-            st.write(f"Amount: {amount:.2f}")
-        stock_data.append([item, opening, purchases, closing, sales, price, amount])
-    stock_df = pd.DataFrame(stock_data, columns=["Item", "Opening Stock", "Purchases", "Closing Stock", "Sales", "Price per Item", "Amount"])
-    total_sales_amount = stock_df["Amount"].sum()
-    st.markdown(f"Total Sales Amount: KES {total_sales_amount:,.2f}")
-    save_prices(st.session_state.prices)
+#Stock Sheet 
+   ITEMS = [
+    "Item 1", "Item 2", "Item 3",  # ... replace with all your 60 items
+]
+
+st.header("Stock Sheet")
+
+  #Initialize or load dataframe in session state
+if "stock_df" not in st.session_state:
+    stock_df = pd.DataFrame({
+        "Item": ITEMS,
+        "Opening Stock": 0,
+        "Purchases": 0,
+        "Closing Stock": 0,
+        "Price per Item": 0.0,
+    })
+    st.session_state.stock_df = stock_df
+else:
+    stock_df = st.session_state.stock_df
+
+  #Editable columns for user input
+editable_cols = ["Opening Stock", "Purchases", "Closing Stock", "Price per Item"]
+
+  #Show editable data editor with locked 'Item' column
+edited_df = st.data_editor(
+    stock_df,
+    column_config={
+        "Item": st.column_config.TextColumn("Item", disabled=True)
+    },
+    num_rows="fixed",
+    use_container_width=True
+)
+
+  #Calculate Sales and Amount columns
+edited_df["Sales"] = edited_df["Opening Stock"] + edited_df["Purchases"] - edited_df["Closing Stock"]
+edited_df["Amount"] = edited_df["Sales"] * edited_df["Price per Item"]
+  #Display the full dataframe with calculations
+st.dataframe(edited_df)
+
+  #Save dataframe back to session state
+st.session_state.stock_df = edited_df
+
+  #Show total sales amount
+total_sales_amount = edited_df["Amount"].sum()
+st.markdown(f"### Total Sales Amount: KES {total_sales_amount:,.2f}")
 
 #Accommodation Data 
 st.header("Accommodation Data Entry")
