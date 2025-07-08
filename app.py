@@ -78,7 +78,7 @@ excel_data = to_excel(full_df)
 st.download_button(
     label="Download Stock Sheet as Excel",
     data=excel_data,
-[13:13, 08/07/2025] Rex: file_name=f"pillars_stock_sheet_{pd.Timestamp.now().date()}.xlsx",
+    file_name=f"pillars_stock_sheet_{pd.Timestamp.now().date()}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
 
