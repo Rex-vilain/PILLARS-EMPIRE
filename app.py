@@ -210,13 +210,17 @@ edited_stock_df = st.data_editor(
     stock_df[editable_cols],
     num_rows="dynamic",
     use_container_width=True,
-    key=#Calculate Sales and Amount columns
+    key="stock_editor"
+)  # <--- Close the function call here
+
+  #Calculate Sales and Amount columns
 edited_stock_df["Sales"] = (
-    edited_stock_df["Opening Stock"] + edited_stock_df["Purchases"] - edited_stock_df["Closing Stock"]
+[19:17, 08/07/2025] Rex: edited_stock_df["Opening Stock"] + edited_stock_df["Purchases"] - edited_stock_df["Closing Stock"]
 )
 edited_stock_df["Amount"] = (
     edited_stock_df["Sales"] * edited_stock_df["Selling Price"]
 )
+
  #Display full dataframe with calculated columns (read-only)
 st.dataframe(edited_stock_df)
 
