@@ -186,11 +186,11 @@ def save_section_df(date_str, section, df):
 
 st.title("Daily Business Tracker")
 
-Pick date for viewing/editing data
+#Pick date for viewing/editing data
 selected_date = st.date_input("Select Date")
 date_str = selected_date.strftime("%Y-%m-%d")
 
-#STOCK SHEET 
+#STOCK SHEET
 
 st.header("Stock Sheet")
 
@@ -218,7 +218,7 @@ if st.button("Save Stock Data"):
     save_section_df(date_str, "stock", edited_stock_df.drop(columns=["Sales", "Amount"], errors='ignore'))
     st.success("Stock data saved!")
 
-#ACCOMMODATION DATA 
+#ACCOMMODATION DATA
 
 st.header("Accommodation Data")
 
@@ -260,12 +260,9 @@ expenses_df = load_section_df(date_str, "expenses", default_expenses_df)
 edited_expenses_df = st.data_editor(expenses_df, num_rows="dynamic", use_container_width=True)
 
 total_expenses = edited_expenses_df["Amount"].sum()
-[15:17, 08/07/2025] Rex: st.markdown(f"Total Expenses: KES {total_expenses:,.2f}")
+st.markdown(f"Total Expenses: KES {total_expenses:,.2f}")
 
-if st.button("Save Expenses Data"):
-    save_section_df(date_str, "expenses", edited_expenses_df)
-    st.success("Expenses data saved!")
-#MONEY PAID TO BOSS AND INVESTED 
+#MONEY PAID TO BOSS AND INVESTED
 
 st.header("Money Transactions")
 
