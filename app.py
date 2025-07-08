@@ -191,33 +191,41 @@ selected_date = st.date_input("Select Date")
 date_str = selected_date.strftime("%Y-%m-%d")
 
 #STOCK SHEET
-
 st.header("Pillars Bar & Restaurant Stock Sheet")
 
-stock_data = []
-for item in ITEMS:
-    opening = st.number_input(f"{item} - Opening Stock", min_value=0, value=0, key=f"{item}_opening")
-    purchases = st.number_input(f"{item} - Purchases", min_value=0, value=0, key=f"{item}_purchases")
-    closing = st.number_input(f"{item} - Closing Stock", min_value=0, value=0, key=f"{item}_closing")
-    price = st.number_input(f"{item} - Selling Price", min_value=0.0, value=0.0, key=f"{item}_price")
+default_stock_df = pd.DataFrame({
+    "Item": ITEMS,
+    "Opening Stock": [0]*len(ITEMS),
+    "Purchases": [0]*len(ITEMS),
+    "Closing Stock": [0]*len(ITEMS),
+    "Selling Price": [0.0]*len(ITEMS)
+})
 
-    sales = opening + purchases - closing
-    amount = sales * price
+stock_df = load_section_df(date_str, "stock", default_stock_df)
 
-    stock_data.append({
-        "Item": item,
-        "Opening Stock": opening,
-        "Purchases": purchases,
-        "Closing Stock": closing,
-        "Selling Price": price,
-        "Sales": sales,
-        "Amount": amount
-    })
+  #Editable stock table
+edited_stock_df = st.data_editor(
+    stock_df,
+    num_rows="dynamic",
+    use_container_width=True,
+    key="stock_editor"
+)
 
-stock_df = pd.DataFrame(stock_data)
-st.dataframe(stock_df)
+  #Recalculate Sales and Amount columns
+edited_stock_df["Sales"] = (
+    edited_stock_df["Opening Stock"] + edited_stock_df["Purchases"] - edited_stock_df["Closing Stock"]
+)
+edited_stock_df["Amount"] = (
+    edited_stock_df["Sales"] * edited_stock_df["Selling Price"]
+)
 
-st.markdown(f"Total Sales Amount: KES {stock_df['Amount'].sum():,.2f}")
+  #Show updated table
+st.dataframe(edited_stock_df)
+
+  #Save button
+if st.button("Save Stock Data"):
+    save_section_df(date_str, "stock", edited_stock_df.drop(columns=["Sales", "Amount"]))
+    st.success("Stock data saved!")
 
 
 #ACCOMMODATION DATA
