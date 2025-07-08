@@ -85,6 +85,20 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
 
+#View Past Records 
+st.header("📁 View Past Records")
+
+view_date = st.date_input("Select date to view saved data")
+filename = f"pillars_stock_sheet_{view_date}.xlsx"
+
+if os.path.exists(filename):
+    with open(filename, "rb") as file:
+        st.download_button("Download This Record", file, file_name=filename)
+        st.success("Record loaded. You can open or download it.")
+else:
+    st.warning("No record found for that date.")
+
+
 #Helper Functions
 
 def get_price_file():
