@@ -11,16 +11,76 @@ DATA_DIR = "data"
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
-ITEMS = [
-    "TUSKER", "PILISNER", "TUSKER MALT", "TUSKER LITE", "GUINESS KUBWA", "GUINESS SMALL", "BALOZICAN",
-    "WHITE CAP", "BALOZI", "SMIRNOFFICE", "SAVANNAH", "SNAPP", "TUSKER CIDER", "KINGFISHER", "ALLSOPPS",
-    "G.K CAN", "T.LITE CAN", "GUARANA", "REDBULL", "RICHOT ½", "RICHOT ¼", "VICEROY ½", "VICEROY ¼",
-    "VODKA½", "VODKA¼", "KENYACANE ¾", "KENYACANE ½", "KENYACANE ¼", "GILBEYS ½", "GILBEYS ¼", "V&A 750ml",
-    "CHROME", "TRIPLE ACE", "BLACK AND WHITE", "KIBAO½", "KIBAO¼", "HUNTERS ½", "HUNTERS ¼", "CAPTAIN MORGAN",
-    "KONYAGI", "V&A", "COUNTY", "BEST 750ml", "WATER 1L", "WATER½", "LEMONADE", "CAPRICE", "FAXE", "C.MORGAN",
-    "VAT 69", "SODA300ML", "SODA500ML", "BLACK AND WHITE", "BEST", "CHROME 750ml", "MANGO", "TRUST", "PUNCH",
-    "VODKA 750ml", "KONYAGI 500ml", "GILBEYS 750m"
+items = [
+    "TUSKER", "PILISNER", "TUSKER MALT", "TUSKER LITE", "GUINESS KUBWA",
+    "GUINESS SMALL", "BALOZICAN", "WHITE CAP", "BALOZI", "SMIRNOFF ICE",
+    "SAVANNAH", "SNAPP", "TUSKER CIDER", "KINGFISHER", "ALLSOPPS",
+    "G.K CAN", "T.LITE CAN", "GUARANA", "REDBULL", "RICHOT ½",
+    "RICHOT ¼", "VICEROY ½", "VICEROY ¼", "VODKA½", "VODKA¼",
+    "KENYACANE ¾", "KENYACANE ½", "KENYACANE ¼", "GILBEYS ½", "GILBEYS ¼",
+    "V&A 750ml", "CHROME", "TRIPLE ACE", "BLACK AND WHITE", "KIBAO½",
+    "KIBAO¼", "HUNTERS ½", "HUNTERS ¼", "CAPTAIN MORGAN", "KONYAGI",
+    "V&A", "COUNTY", "BEST 750ml", "WATER 1L", "WATER½",
+    "LEMONADE", "CAPRICE", "FAXE", "C.MORGAN", "VAT 69",
+    "SODA300ML", "SODA500ML", "BLACK AND WHITE", "BEST", "CHROME 750ml",
+    "MANGO", "TRUST", "PUNCH", "VODKA 750ml", "KONYAGI 500ml",
+    "GILBEYS 750ml"
 ]
+
+st.title("Pillars Bar & Restaurant Stock Sheet")
+
+#Initialize or load dataframe in session state
+if "df" not in st.session_state:
+    df = pd.DataFrame({
+        "Item": items,
+        "Opening Stock": 0,
+        "Purchase": 0,
+        "Closing Stock": 0,
+        "Selling Price": 0.0,
+        "Sales": 0,
+        "Amount": 0.0,
+    })
+    st.session_state.df = df
+else:
+    df = st.session_state.df
+
+  #Editable columns
+editable_cols = ["Opening Stock", "Purchase", "Closing Stock", "Selling Price"]
+
+  #Show editable dataframe with those columns
+edited_df = st.experimental_data_editor(df[["Item"] + editable_cols], num_rows="dynamic")
+
+ #Calculate sales and amount
+edited_df["Sales"] = edited_df["Opening Stock"] + edited_df["Purchase"] - edited_df["Closing Stock"]
+edited_df["Amount"] = edited_df["Sales"] * edited_df["Selling Price"]
+
+  #Combine for full dataframe
+full_df = pd.concat([edited_df, edited_df[["Sales", "Amount"]]], axis=1)
+
+  #Update session state
+st.session_state.df = full_df
+
+  #Show the final table
+st.dataframe(full_df)
+
+  #Function to export to Excel
+def to_excel(df):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine="xlsxwriter")
+    df.to_excel(writer, index=False, sheet_name="StockSheet")
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
+
+excel_data = to_excel(full_df)
+
+  #Download button for Excel file
+st.download_button(
+    label="Download Stock Sheet as Excel",
+    data=excel_data,
+[13:13, 08/07/2025] Rex: file_name=f"pillars_stock_sheet_{pd.Timestamp.now().date()}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+)
 
 #Helper Functions
 
