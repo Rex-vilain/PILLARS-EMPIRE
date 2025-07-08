@@ -170,7 +170,7 @@ total_sales_amount = total_amount  # Assuming this was calculated from stock & a
 
 net_profit = (total_sales_amount + money_invested) - (total_expenses + money_paid)
 st.markdown(f"Total Sales Amount: KES {total_sales_amount:,.2f}")
-[13:03, 08/07/2025] Rex: st.markdown(f"Net Profit: KES {net_profit:,.2f}")
+st.markdown(f"Net Profit: KES {net_profit:,.2f}")
 
 #Save & Download Data 
 st.header("Save & Download Daily Report")
