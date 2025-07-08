@@ -32,7 +32,7 @@ st.title("Pillars Bar & Restaurant Stock Sheet")
 #Initialize or load dataframe in session state
 if "df" not in st.session_state:
     df = pd.DataFrame({
-        "Item": items,
+        "ITEM": ITEMS,
         "Opening Stock": 0,
         "Purchase": 0,
         "Closing Stock": 0,
