@@ -78,9 +78,9 @@ def to_excel(df):
     return processed_data
 
   #Download button for Excel file
+excel_data = to_excel(full_df)
 st.download_button(
     label="Download Stock Sheet as Excel",
-    excel_data = to_excel(full_df)
     data=excel_data,
     file_name=f"pillars_stock_sheet_{pd.Timestamp.now().date()}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
