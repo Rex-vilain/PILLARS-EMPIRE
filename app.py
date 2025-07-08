@@ -184,34 +184,42 @@ if app_mode == "Data Entry":
     save_prices(st.session_state.prices)
 
 #Accommodation Data 
-st.subheader("Accommodation Data Entry")
+st.header("Accommodation Data Entry")
 
-accommodation_columns = [
-    "Row", "1st Floor Rooms", "Ground Floor Rooms", "Money Lendered", "Payment Method"
-]
+  #Initialize or load accommodation dataframe in session state
+if "accom_df" not in st.session_state:
+    accom_data = {
+        "1st Floor Rooms": [0]*15,
+        "Ground Floor Rooms": [0]*15,
+        "Money Lendered": [0]*15,
+        "Payment Method": ["Cash"]*15,
+    }
+    st.session_state.accom_df = pd.DataFrame(accom_data)
+else:
+    accom_df = st.session_state.accom_df
 
-  #Sample rows (adjust to your needs)
-accommodation_rows = [f"Row {i+1}" for i in range(6)]
+  #Editable columns
+editable_cols = ["1st Floor Rooms", "Ground Floor Rooms", "Money Lendered", "Payment Method"]
 
-  #Initialize or load accommodation data
-if "accommodation_df" not in st.session_state:
-    st.session_state.accommodation_df = pd.DataFrame({
-        "Row": accommodation_rows,
-        "1st Floor Rooms": 0,
-        "Ground Floor Rooms": 0,
-        "Money Lendered": 0,
-        "Payment Method": "Cash"
-    })
-
-accommodation_df = st.data_editor(
-    st.session_state.accommodation_df,
+  #Show editable dataframe (fixed number of rows)
+edited_accom_df = st.data_editor(
+    st.session_state.accom_df[editable_cols],
     num_rows="fixed",
-    use_container_width=True
+    use_container_width=True,
 )
 
-  #Update session
-st.session_state.accommodation_df = accommodation_df
+  #Update session state with edited data
+st.session_state.accom_df = edited_accom_df
 
+  #Calculate totals
+total_first_floor = edited_accom_df["1st Floor Rooms"].sum()
+total_ground_floor = edited_accom_df["Ground Floor Rooms"].sum()
+total_lendered = edited_accom_df["Money Lendered"].sum()
+
+  #Show totals below
+st.markdown(f"Total 1st Floor Rooms: {total_first_floor}")
+[14:27, 08/07/2025] Rex: st.markdown(f"Total Ground Floor Rooms: {total_ground_floor}")
+st.markdown(f"Total Money Lendered: KES {total_lendered:,.2f}")
 
 #Expenses Entry 
 st.header("Daily Expenses")
