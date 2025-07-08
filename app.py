@@ -198,35 +198,32 @@ default_stock_df = pd.DataFrame({
     "Opening Stock": [0]*len(ITEMS),
     "Purchases": [0]*len(ITEMS),
     "Closing Stock": [0]*len(ITEMS),
-    "Selling Price": [0.0]*len(ITEMS)
+    "Selling Price": [0.0]*len(ITEMS),
 })
 
 stock_df = load_section_df(date_str, "stock", default_stock_df)
 
-  #Editable stock table
+editable_cols = ["Item", "Opening Stock", "Purchases", "Closing Stock", "Selling Price"]
+
+ #Editable stock table with only editable columns
 edited_stock_df = st.data_editor(
-    stock_df,
+    stock_df[editable_cols],
     num_rows="dynamic",
     use_container_width=True,
-    key="stock_editor"
-)
-
-  #Recalculate Sales and Amount columns
+    key=#Calculate Sales and Amount columns
 edited_stock_df["Sales"] = (
     edited_stock_df["Opening Stock"] + edited_stock_df["Purchases"] - edited_stock_df["Closing Stock"]
 )
 edited_stock_df["Amount"] = (
     edited_stock_df["Sales"] * edited_stock_df["Selling Price"]
 )
-
-  #Show updated table
+ #Display full dataframe with calculated columns (read-only)
 st.dataframe(edited_stock_df)
 
-  #Save button
+ #Save button saves only editable columns to CSV
 if st.button("Save Stock Data"):
-    save_section_df(date_str, "stock", edited_stock_df.drop(columns=["Sales", "Amount"]))
+    save_section_df(date_str, "stock", edited_stock_df[editable_cols])
     st.success("Stock data saved!")
-
 
 #ACCOMMODATION DATA
 
