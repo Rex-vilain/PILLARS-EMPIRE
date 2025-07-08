@@ -243,7 +243,7 @@ st.markdown(f"Total Money Lendered: KES {total_lendered:,.2f}")
 
 
     #Expenses Entry
-    st.header("Daily Expenses")
+st.header("Daily Expenses")
 
     if "expenses_df" not in st.session_state:
         st.session_state.expenses_df = pd.DataFrame(columns=["Item", "Amount"])
