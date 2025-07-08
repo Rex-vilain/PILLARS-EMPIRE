@@ -233,6 +233,9 @@ expenses_df = st.data_editor(
     key="expenses_editor"
 )
 
+total_amount = full_df["Amount"].sum()  # Replace full_df with your stock dataframe variable
+total_sales_amount = total_amount
+
 total_expenses = expenses_df["Amount"].sum() if "Amount" in expenses_df else 0
 st.markdown(f"Total Expenses: KES {total_expenses:,.2f}")
 
