@@ -60,13 +60,6 @@ full_df = pd.concat([edited_df, edited_df[["Sales", "Amount"]]], axis=1)
   #Update session state
 st.session_state.df = full_df
 
-  #Show the final table
-
-    #Remove duplicate columns
-full_df = full_df.loc[:, ~full_df.columns.duplicated()]
-st.dataframe(full_df)
-
-st.dataframe(full_df)
 
   #Function to export to Excel
 def to_excel(df):
