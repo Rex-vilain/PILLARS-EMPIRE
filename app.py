@@ -48,7 +48,7 @@ else:
 editable_cols = ["Opening Stock", "Purchase", "Closing Stock", "Selling Price"]
 
   #Show editable dataframe with those columns
-edited_df = st.experimental_data_editor(df[["Item"] + editable_cols])
+edited_df = st.data_editor(df[["Item"] + editable_cols])
 
  #Calculate sales and amount
 edited_df["Sales"] = edited_df["Opening Stock"] + edited_df["Purchase"] - edited_df["Closing Stock"]
