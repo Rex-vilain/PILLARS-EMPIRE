@@ -32,9 +32,9 @@ st.title("Pillars Bar & Restaurant Stock Sheet")
 #Initialize or load dataframe in session state
 if "df" not in st.session_state:
     df = pd.DataFrame({
-        "ITEM": ITEMS,
+        "Item": ITEMS,
         "Opening Stock": 0,
-        "Purchase": 0,
+        "Purchases": 0,
         "Closing Stock": 0,
         "Selling Price": 0.0,
         "Sales": 0,
@@ -45,13 +45,12 @@ else:
     df = st.session_state.df
 
   #Editable columns
-editable_cols = ["Opening Stock", "Purchase", "Closing Stock", "Selling Price"]
+editable_cols = ["Opening Stock", "Purchases", "Closing Stock", "Selling Price"]
 
   #Show editable dataframe with those columns
-edited_df = st.data_editor(df[["ITEM"] + editable_cols])
-
+edited_df = st.data_editor(df[["Item"] + editable_cols], num_rows="fixed", use_container_width=True)
  #Calculate sales and amount
-edited_df["Sales"] = edited_df["Opening Stock"] + edited_df["Purchase"] - edited_df["Closing Stock"]
+edited_df["Sales"] = edited_df["Opening Stock"] + edited_df["Purchases"] - edited_df["Closing Stock"]
 edited_df["Amount"] = edited_df["Sales"] * edited_df["Selling Price"]
 
   #Combine for full dataframe
