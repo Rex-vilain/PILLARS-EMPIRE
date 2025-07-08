@@ -12,11 +12,6 @@ if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
 ITEMS = [
-    "TUSKER", "PILSNER", "TUSKER MALT", "TUSKER LITE", "GUINESS KUBWA",
-    "GUINESS SMALL", "BALOZI CAN", "WHITE CAP", "BALOZI", "SMIRNOFF ICE",
-    # ... include all 60 items here ...
-]
-items = [
     "TUSKER", "PILISNER", "TUSKER MALT", "TUSKER LITE", "GUINESS KUBWA",
     "GUINESS SMALL", "BALOZICAN", "WHITE CAP", "BALOZI", "SMIRNOFF ICE",
     "SAVANNAH", "SNAPP", "TUSKER CIDER", "KINGFISHER", "ALLSOPPS",
