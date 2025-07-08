@@ -207,13 +207,18 @@ editable_cols = ["Item", "Opening Stock", "Purchases", "Closing Stock", "Selling
 
   #Show editable table
 edited_stock_df = st.data_editor(
+stock_df = load_section_df(date_str, "stock", default_stock_df)
+
+editable_cols = ["Item", "Opening Stock", "Purchases", "Closing Stock", "Selling Price"]
+
+edited_stock_df = st.data_editor(
     stock_df[editable_cols],
     num_rows="dynamic",
     use_container_width=True,
     key="stock_editor"
 )
 
-  #Recalculate Sales and Amount
+  #Recalculate Sales and Amount columns
 edited_stock_df["Sales"] = (
     edited_stock_df["Opening Stock"] + edited_stock_df["Purchases"] - edited_stock_df["Closing Stock"]
 )
