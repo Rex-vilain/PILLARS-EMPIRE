@@ -106,15 +106,101 @@ if app_mode == "Data Entry":
     st.markdown(f"Total Sales Amount: KES {total_sales_amount:,.2f}")
     save_prices(st.session_state.prices)
 
-    # Accommodation Data
-    st.header("Accommodation Data")
-    accom_entries = []
-    for i in range(5):
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            first_floor = st.number_input(f"Row {i+1} - 1st Floor Rooms", min_value=0, value=0, key=f"accom_{i}_first")
-        with col2:
-            ground_floor = st.number_input(f"Row {i+1} - Ground Floor Rooms", min_value=0, value=0, key=f"accom_{i}_ground")
-        with col3:
-            money_lendered =
+#Accommodation Data 
+st.header("Accommodation Data")
 
+accom_data = []
+num_rows = 15  # You can adjust this as needed
+
+for i in range(num_rows):
+    col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
+    with col1:
+        first_floor = st.number_input(f"Row {i+1} - 1st Floor Rooms", min_value=0, value=0, key=f"first_{i}")
+    with col2:
+        ground_floor = st.number_input(f"Row {i+1} - Ground Floor Rooms", min_value=0, value=0, key=f"ground_{i}")
+    with col3:
+        lendered = st.number_input(f"Row {i+1} - Money Lendered", min_value=0, value=0, key=f"lendered_{i}")
+    with col4:
+        payment_method = st.selectbox(f"Row {i+1} - Payment Method", ["Cash", "M-Pesa", "Other"], key=f"method_{i}")
+    
+    accom_data.append({
+        "1st Floor Rooms": first_floor,
+        "Ground Floor Rooms": ground_floor,
+        "Money Lendered": lendered,
+        "Payment Method": payment_method
+    })
+
+accom_df = pd.DataFrame(accom_data)
+total_first_floor = accom_df["1st Floor Rooms"].sum()
+total_ground_floor = accom_df["Ground Floor Rooms"].sum()
+total_lendered = accom_df["Money Lendered"].sum()
+
+st.dataframe(accom_df)
+st.markdown(f"Total 1st Floor Rooms: {total_first_floor}")
+st.markdown(f"Total Ground Floor Rooms: {total_ground_floor}")
+st.markdown(f"Total Money Lendered: KES {total_lendered:,.2f}")
+
+#Expenses Entry 
+st.header("Daily Expenses")
+
+if "expenses_df" not in st.session_state:
+    st.session_state.expenses_df = pd.DataFrame(columns=["Item", "Amount"])
+
+expenses_df = st.data_editor(
+    st.session_state.expenses_df,
+    num_rows="dynamic",
+    key="expenses_editor"
+)
+
+total_expenses = expenses_df["Amount"].sum() if "Amount" in expenses_df else 0
+st.markdown(f"Total Expenses: KES {total_expenses:,.2f}")
+
+#Money Paid to Boss 
+st.subheader("Money Paid to Boss")
+money_paid = st.number_input("Enter amount paid to boss", min_value=0, value=0)
+
+#Money Invested from Chama 
+st.subheader("Money Invested (e.g., from Chama)")
+money_invested = st.number_input("Enter amount invested", min_value=0, value=0)
+
+#Summary & Profit Calculation
+st.header("Summary")
+
+total_sales_amount = total_amount  # Assuming this was calculated from stock & accommodation
+
+net_profit = (total_sales_amount + money_invested) - (total_expenses + money_paid)
+st.markdown(f"Total Sales Amount: KES {total_sales_amount:,.2f}")
+[13:03, 08/07/2025] Rex: st.markdown(f"Net Profit: KES {net_profit:,.2f}")
+
+#Save & Download Data 
+st.header("Save & Download Daily Report")
+
+if st.button("Save Data"):
+    date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    folder = "daily_reports"
+    os.makedirs(folder, exist_ok=True)
+
+    # Save all data
+    stock_df.to_csv(f"{folder}/stock_{date_str}.csv", index=False)
+    accom_df.to_csv(f"{folder}/accommodation_{date_str}.csv", index=False)
+    expenses_df.to_csv(f"{folder}/expenses_{date_str}.csv", index=False)
+
+    # Summary file
+    summary = {
+        "Total Sales": [total_sales_amount],
+        "Expenses": [total_expenses],
+        "Money Paid to Boss": [money_paid],
+        "Money Invested": [money_invested],
+        "Profit": [net_profit]
+    }
+    pd.DataFrame(summary).to_csv(f"{folder}/summary_{date_str}.csv", index=False)
+
+    st.success("Data saved successfully!")
+
+#Download Reports 
+st.header("View & Download Past Reports")
+report_files = os.listdir("daily_reports") if os.path.exists("daily_reports") else []
+
+for file in report_files:
+    with open(f"daily_reports/{file}", "rb") as f:
+        st.download_button(label=f"Download {file}", data=f, file_name=file)
