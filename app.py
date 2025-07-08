@@ -184,38 +184,34 @@ if app_mode == "Data Entry":
     save_prices(st.session_state.prices)
 
 #Accommodation Data 
-st.header("Accommodation Data")
+st.subheader("Accommodation Data Entry")
 
-accom_data = []
-num_rows = 15  # You can adjust this as needed
+accommodation_columns = [
+    "Row", "1st Floor Rooms", "Ground Floor Rooms", "Money Lendered", "Payment Method"
+]
 
-for i in range(num_rows):
-    col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
-    with col1:
-        first_floor = st.number_input(f"Row {i+1} - 1st Floor Rooms", min_value=0, value=0, key=f"first_{i}")
-    with col2:
-        ground_floor = st.number_input(f"Row {i+1} - Ground Floor Rooms", min_value=0, value=0, key=f"ground_{i}")
-    with col3:
-        lendered = st.number_input(f"Row {i+1} - Money Lendered", min_value=0, value=0, key=f"lendered_{i}")
-    with col4:
-        payment_method = st.selectbox(f"Row {i+1} - Payment Method", ["Cash", "M-Pesa", "Other"], key=f"method_{i}")
-    
-    accom_data.append({
-        "1st Floor Rooms": first_floor,
-        "Ground Floor Rooms": ground_floor,
-        "Money Lendered": lendered,
-        "Payment Method": payment_method
+  #Sample rows (adjust to your needs)
+accommodation_rows = [f"Row {i+1}" for i in range(6)]
+
+  #Initialize or load accommodation data
+if "accommodation_df" not in st.session_state:
+    st.session_state.accommodation_df = pd.DataFrame({
+        "Row": accommodation_rows,
+        "1st Floor Rooms": 0,
+        "Ground Floor Rooms": 0,
+        "Money Lendered": 0,
+        "Payment Method": "Cash"
     })
 
-accom_df = pd.DataFrame(accom_data)
-total_first_floor = accom_df["1st Floor Rooms"].sum()
-total_ground_floor = accom_df["Ground Floor Rooms"].sum()
-total_lendered = accom_df["Money Lendered"].sum()
+accommodation_df = st.data_editor(
+    st.session_state.accommodation_df,
+    num_rows="fixed",
+    use_container_width=True
+)
 
-st.dataframe(accom_df)
-st.markdown(f"Total 1st Floor Rooms: {total_first_floor}")
-st.markdown(f"Total Ground Floor Rooms: {total_ground_floor}")
-st.markdown(f"Total Money Lendered: KES {total_lendered:,.2f}")
+  #Update session
+st.session_state.accommodation_df = accommodation_df
+
 
 #Expenses Entry 
 st.header("Daily Expenses")
