@@ -4,84 +4,117 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import date
+from io import BytesIO
 
-#App title
-st.title("Pillars Bar Management App")
+#Constants
+DATA_DIR = "data"
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
 
-#Date and folder setup
-today = st.date_input("Select Date", value=date.today())
-folder = f"data/{today}"
-os.makedirs(folder, exist_ok=True)
-
-#Items list (add more as needed)
-items = [
-    "TUSKER", "PILISNER", "TUSKER MALT", "TUSKER LITE", "GUINESS KUBWA", "GUINESS SMALL",
-    "SMIRNOFFICE", "SODA300ML", "VODKA 750ml", "GILBEYS 750m"
+ITEMS = [
+    "TUSKER", "PILISNER", "TUSKER MALT", "TUSKER LITE", "GUINESS KUBWA", "GUINESS SMALL", "BALOZICAN",
+    "WHITE CAP", "BALOZI", "SMIRNOFFICE", "SAVANNAH", "SNAPP", "TUSKER CIDER", "KINGFISHER", "ALLSOPPS",
+    "G.K CAN", "T.LITE CAN", "GUARANA", "REDBULL", "RICHOT ½", "RICHOT ¼", "VICEROY ½", "VICEROY ¼",
+    "VODKA½", "VODKA¼", "KENYACANE ¾", "KENYACANE ½", "KENYACANE ¼", "GILBEYS ½", "GILBEYS ¼", "V&A 750ml",
+    "CHROME", "TRIPLE ACE", "BLACK AND WHITE", "KIBAO½", "KIBAO¼", "HUNTERS ½", "HUNTERS ¼", "CAPTAIN MORGAN",
+    "KONYAGI", "V&A", "COUNTY", "BEST 750ml", "WATER 1L", "WATER½", "LEMONADE", "CAPRICE", "FAXE", "C.MORGAN",
+    "VAT 69", "SODA300ML", "SODA500ML", "BLACK AND WHITE", "BEST", "CHROME 750ml", "MANGO", "TRUST", "PUNCH",
+    "VODKA 750ml", "KONYAGI 500ml", "GILBEYS 750m"
 ]
 
-#Stock Sheet
-st.header("Stock Sheet")
-stock_df = pd.DataFrame({
-    "Item": items,
-    "Opening Stock": [0]*len(items),
-    "Purchases": [0]*len(items),
-    "Closing Stock": [0]*len(items),
-    "Sales": [0]*len(items),
-    "Price Per Item": [100]*len(items),
-    "Amount": [0]*len(items)
-})
-stock_df = st.data_editor(stock_df, num_rows="dynamic", key="stock")
+#Helper Functions
 
-#Calculate
-stock_df["Sales"] = stock_df["Opening Stock"] + stock_df["Purchases"] - stock_df["Closing Stock"]
-stock_df["Amount"] = stock_df["Sales"] * stock_df["Price Per Item"]
-stock_total = stock_df["Amount"].sum()
+def get_price_file():
+    return os.path.join(DATA_DIR, "item_prices.csv")
 
-#Accommodation -
-st.header("Accommodation Collection")
-accom_df = pd.DataFrame({
-    "1st Floor Rooms": [""],
-    "Ground Floor Rooms": [""],
-    "Money Lendered": [0],
-    "Payment Method": [""]
-})
-accom_df = st.data_editor(accom_df, num_rows="dynamic", key="accom")
-accom_total = accom_df["Money Lendered"].sum()
+def load_prices():
+    price_file = get_price_file()
+    if os.path.exists(price_file):
+        df = pd.read_csv(price_file, index_col=0)
+        prices = df["Price"].to_dict()
+    else:
+        prices = {item: 0.0 for item in ITEMS}
+    return prices
 
-#Expenses
-st.header("Expenses")
-expenses_df = pd.DataFrame({
-    "Description": [""],
-    "Amount": [0]
-})
-expenses_df = st.data_editor(expenses_df, num_rows="dynamic", key="expenses")
-expenses_total = expenses_df["Amount"].sum()
+def save_prices(prices):
+    df = pd.DataFrame.from_dict(prices, orient="index", columns=["Price"])
+    df.to_csv(get_price_file())
 
-#Other Financials
-st.header("Other Transactions")
-money_to_boss = st.number_input("Money Paid to Boss", min_value=0)
-money_from_chama = st.number_input("Money from Chama", min_value=0)
+def to_excel(df_dict):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        for sheet_name, df in df_dict.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+    processed_data = output.getvalue()
+    return processed_data
 
-#Summary
-st.header("Summary")
-total_income = stock_total + accom_total + money_from_chama
-profit = total_income - (expenses_total + money_to_boss)
+def load_report(date_str):
+    file_path = os.path.join(DATA_DIR, f"{date_str}.xlsx")
+    if os.path.exists(file_path):
+        xls = pd.ExcelFile(file_path)
+        data = {sheet: xls.parse(sheet) for sheet in xls.sheet_names}
+        return data
+    else:
+        return None
 
-st.metric("Total Sales", stock_total)
-st.metric("Accommodation", accom_total)
-st.metric("Expenses", expenses_total)
-st.metric("Profit", profit)
+def list_saved_reports():
+    files = [f for f in os.listdir(DATA_DIR) if f.endswith(".xlsx")]
+    dates = [f.replace(".xlsx", "") for f in files]
+    return sorted(dates, reverse=True)
 
-#Save All
-if st.button("Save All Data"):
-    stock_df.to_csv(f"{folder}/stock.csv", index=False)
-    accom_df.to_csv(f"{folder}/accommodation.csv", index=False)
-    expenses_df.to_csv(f"{folder}/expenses.csv", index=False)
-    summary_df = pd.DataFrame({
-        "Metric": ["Sales", "Accommodation", "Chama", "Expenses", "Boss", "Profit"],
-        "Amount": [stock_total, accom_total, money_from_chama, expenses_total, money_to_boss, profit]
-    })
-    summary_df.to_csv(f"{folder}/summary.csv", index=False)
-    st.success("Data Saved Successfully")
+#Streamlit App 
 
+st.set_page_config(page_title="Pillars Bar Management App", layout="wide")
+st.title("Pillars Bar & Accommodation Management")
+
+#Sidebar for Navigation 
+st.sidebar.title("Navigation")
+app_mode = st.sidebar.selectbox("Choose the app mode", ["Data Entry", "View Past Reports"])
+
+if app_mode == "Data Entry":
+    # --- Date Selection ---
+    record_date = st.date_input("Select Date", value=date.today())
+    date_str = record_date.strftime("%Y-%m-%d")
+    st.markdown(f"### Records for: {date_str}")
+
+    # Load or Initialize Prices 
+    if "prices" not in st.session_state:
+        st.session_state.prices = load_prices()
+
+    #Stock Sheet 
+    st.header("Stock Sheet")
+    stock_data = []
+    for item in ITEMS:
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            opening = st.number_input(f"{item} - Opening Stock", min_value=0, value=0, key=f"{item}_opening")
+        with col2:
+            purchases = st.number_input(f"{item} - Purchases", min_value=0, value=0, key=f"{item}_purchases")
+        with col3:
+            closing = st.number_input(f"{item} - Closing Stock", min_value=0, value=0, key=f"{item}_closing")
+        with col4:
+            price = st.number_input(f"{item} - Price per Item", min_value=0.0, value=st.session_state.prices.get(item, 0.0), key=f"{item}_price")
+            st.session_state.prices[item] = price
+        sales = opening + purchases - closing
+        amount = sales * price
+        with col5:
+            st.write(f"Sales: {sales}")
+            st.write(f"Amount: {amount:.2f}")
+        stock_data.append([item, opening, purchases, closing, sales, price, amount])
+    stock_df = pd.DataFrame(stock_data, columns=["Item", "Opening Stock", "Purchases", "Closing Stock", "Sales", "Price per Item", "Amount"])
+    total_sales_amount = stock_df["Amount"].sum()
+    st.markdown(f"Total Sales Amount: KES {total_sales_amount:,.2f}")
+    save_prices(st.session_state.prices)
+
+    # Accommodation Data
+    st.header("Accommodation Data")
+    accom_entries = []
+    for i in range(5):
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            first_floor = st.number_input(f"Row {i+1} - 1st Floor Rooms", min_value=0, value=0, key=f"accom_{i}_first")
+        with col2:
+            ground_floor = st.number_input(f"Row {i+1} - Ground Floor Rooms", min_value=0, value=0, key=f"accom_{i}_ground")
+        with col3:
+            money_lendered =
 
