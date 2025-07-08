@@ -84,4 +84,4 @@ if st.button("Save All Data"):
     summary_df.to_csv(f"{folder}/summary.csv", index=False)
     st.success("Data Saved Successfully")
 
-pip install streamlit
+
