@@ -3,7 +3,7 @@
 import streamlit as st
 import pandas as pd
 import os
-from datetime import date
+from datetime import date, datetime
 from io import BytesIO
 
 #Constants
@@ -85,7 +85,7 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
 
-#View Past Records 
+#View Past Records
 st.header("📁 View Past Records")
 
 view_date = st.date_input("Select date to view saved data")
@@ -139,12 +139,12 @@ def list_saved_reports():
     dates = [f.replace(".xlsx", "") for f in files]
     return sorted(dates, reverse=True)
 
-#Streamlit App 
+#Streamlit App
 
 st.set_page_config(page_title="Pillars Bar Management App", layout="wide")
 st.title("Pillars Bar & Accommodation Management")
 
-#Sidebar for Navigation 
+#Sidebar for Navigation
 st.sidebar.title("Navigation")
 app_mode = st.sidebar.selectbox("Choose the app mode", ["Data Entry", "View Past Reports"])
 
@@ -154,155 +154,151 @@ if app_mode == "Data Entry":
     date_str = record_date.strftime("%Y-%m-%d")
     st.markdown(f"### Records for: {date_str}")
 
-    # Load or Initialize Prices 
+    # Load or Initialize Prices
     if "prices" not in st.session_state:
         st.session_state.prices = load_prices()
 
-#Stock Sheet 
-   ITEMS = [
-    "Item 1", "Item 2", "Item 3",  # ... replace with all your 60 items
-]
+    #Stock Sheet
+    st.header("Stock Sheet")
 
-st.header("Stock Sheet")
+    #Initialize or load dataframe in session state
+    if "stock_df" not in st.session_state:
+        stock_df = pd.DataFrame({
+            "Item": ITEMS,
+            "Opening Stock": 0,
+            "Purchases": 0,
+            "Closing Stock": 0,
+            "Price per Item": 0.0,
+        })
+        st.session_state.stock_df = stock_df
+    else:
+        stock_df = st.session_state.stock_df
 
-  #Initialize or load dataframe in session state
-if "stock_df" not in st.session_state:
-    stock_df = pd.DataFrame({
-        "Item": ITEMS,
-        "Opening Stock": 0,
-        "Purchases": 0,
-        "Closing Stock": 0,
-        "Price per Item": 0.0,
-    })
-    st.session_state.stock_df = stock_df
-else:
-    stock_df = st.session_state.stock_df
+    #Editable columns for user input
+    editable_cols = ["Opening Stock", "Purchases", "Closing Stock", "Price per Item"]
 
-  #Editable columns for user input
-editable_cols = ["Opening Stock", "Purchases", "Closing Stock", "Price per Item"]
+    #Show editable data editor with locked 'Item' column
+    edited_df = st.data_editor(
+        stock_df,
+        column_config={
+            "Item": st.column_config.TextColumn("Item", disabled=True)
+        },
+        num_rows="fixed",
+        use_container_width=True
+    )
 
-  #Show editable data editor with locked 'Item' column
-edited_df = st.data_editor(
-    stock_df,
-    column_config={
-        "Item": st.column_config.TextColumn("Item", disabled=True)
-    },
-    num_rows="fixed",
-    use_container_width=True
-)
+    #Calculate Sales and Amount columns
+    edited_df["Sales"] = edited_df["Opening Stock"] + edited_df["Purchases"] - edited_df["Closing Stock"]
+    edited_df["Amount"] = edited_df["Sales"] * edited_df["Price per Item"]
+    #Display the full dataframe with calculations
+    st.dataframe(edited_df)
 
-  #Calculate Sales and Amount columns
-edited_df["Sales"] = edited_df["Opening Stock"] + edited_df["Purchases"] - edited_df["Closing Stock"]
-edited_df["Amount"] = edited_df["Sales"] * edited_df["Price per Item"]
-  #Display the full dataframe with calculations
-st.dataframe(edited_df)
+    #Save dataframe back to session state
+    st.session_state.stock_df = edited_df
 
-  #Save dataframe back to session state
-st.session_state.stock_df = edited_df
+    #Show total sales amount
+    total_sales_amount = edited_df["Amount"].sum()
+    st.markdown(f"### Total Sales Amount: KES {total_sales_amount:,.2f}")
 
-  #Show total sales amount
-total_sales_amount = edited_df["Amount"].sum()
-st.markdown(f"### Total Sales Amount: KES {total_sales_amount:,.2f}")
+    #Accommodation Data
+    st.header("Accommodation Data Entry")
 
-#Accommodation Data 
-st.header("Accommodation Data Entry")
+    #Initialize or load accommodation dataframe in session state
+    if "accom_df" not in st.session_state:
+        accom_data = {
+            "1st Floor Rooms": [0]*15,
+            "Ground Floor Rooms": [0]*15,
+            "Money Lendered": [0]*15,
+            "Payment Method": ["Cash"]*15,
+        }
+        st.session_state.accom_df = pd.DataFrame(accom_data)
+    else:
+        accom_df = st.session_state.accom_df
 
-  #Initialize or load accommodation dataframe in session state
-if "accom_df" not in st.session_state:
-    accom_data = {
-        "1st Floor Rooms": [0]*15,
-        "Ground Floor Rooms": [0]*15,
-        "Money Lendered": [0]*15,
-        "Payment Method": ["Cash"]*15,
-    }
-    st.session_state.accom_df = pd.DataFrame(accom_data)
-else:
-    accom_df = st.session_state.accom_df
+    #Editable columns
+    editable_cols = ["1st Floor Rooms", "Ground Floor Rooms", "Money Lendered", "Payment Method"]
 
-  #Editable columns
-editable_cols = ["1st Floor Rooms", "Ground Floor Rooms", "Money Lendered", "Payment Method"]
+    #Show editable dataframe (fixed number of rows)
+    edited_accom_df = st.data_editor(
+        st.session_state.accom_df[editable_cols],
+        num_rows="fixed",
+        use_container_width=True,
+    )
 
-  #Show editable dataframe (fixed number of rows)
-edited_accom_df = st.data_editor(
-    st.session_state.accom_df[editable_cols],
-    num_rows="fixed",
-    use_container_width=True,
-)
+    #Update session state with edited data
+    st.session_state.accom_df = edited_accom_df
 
-  #Update session state with edited data
-st.session_state.accom_df = edited_accom_df
+    #Calculate totals
+    total_first_floor = edited_accom_df["1st Floor Rooms"].sum()
+    total_ground_floor = edited_accom_df["Ground Floor Rooms"].sum()
+    total_lendered = edited_accom_df["Money Lendered"].sum()
 
-  #Calculate totals
-total_first_floor = edited_accom_df["1st Floor Rooms"].sum()
-total_ground_floor = edited_accom_df["Ground Floor Rooms"].sum()
-total_lendered = edited_accom_df["Money Lendered"].sum()
+    #Show totals below
+    st.markdown(f"Total 1st Floor Rooms: {total_first_floor}")
+    st.markdown(f"Total Ground Floor Rooms: {total_ground_floor}")
+    st.markdown(f"Total Money Lendered: KES {total_lendered:,.2f}")
 
-  #Show totals below
-st.markdown(f"Total 1st Floor Rooms: {total_first_floor}")
-st.markdown(f"Total Ground Floor Rooms: {total_ground_floor}")
-st.markdown(f"Total Money Lendered: KES {total_lendered:,.2f}")
+    #Expenses Entry
+    st.header("Daily Expenses")
 
-#Expenses Entry 
-st.header("Daily Expenses")
+    if "expenses_df" not in st.session_state:
+        st.session_state.expenses_df = pd.DataFrame(columns=["Item", "Amount"])
 
-if "expenses_df" not in st.session_state:
-    st.session_state.expenses_df = pd.DataFrame(columns=["Item", "Amount"])
+    expenses_df = st.data_editor(
+        st.session_state.expenses_df,
+        num_rows="dynamic",
+        key="expenses_editor"
+    )
 
-expenses_df = st.data_editor(
-    st.session_state.expenses_df,
-    num_rows="dynamic",
-    key="expenses_editor"
-)
+    total_amount = edited_df["Amount"].sum()  # Replace full_df with your stock dataframe variable
+    total_sales_amount = total_amount
 
-total_amount = full_df["Amount"].sum()  # Replace full_df with your stock dataframe variable
-total_sales_amount = total_amount
+    total_expenses = expenses_df["Amount"].sum() if "Amount" in expenses_df else 0
+    st.markdown(f"Total Expenses: KES {total_expenses:,.2f}")
 
-total_expenses = expenses_df["Amount"].sum() if "Amount" in expenses_df else 0
-st.markdown(f"Total Expenses: KES {total_expenses:,.2f}")
+    #Money Paid to Boss
+    st.subheader("Money Paid to Boss")
+    money_paid = st.number_input("Enter amount paid to boss", min_value=0, value=0)
 
-#Money Paid to Boss 
-st.subheader("Money Paid to Boss")
-money_paid = st.number_input("Enter amount paid to boss", min_value=0, value=0)
+    #Money Invested from Chama
+    st.subheader("Money Invested (e.g., from Chama)")
+    money_invested = st.number_input("Enter amount invested", min_value=0, value=0)
 
-#Money Invested from Chama 
-st.subheader("Money Invested (e.g., from Chama)")
-money_invested = st.number_input("Enter amount invested", min_value=0, value=0)
+    #Summary & Profit Calculation
+    st.header("Summary")
 
-#Summary & Profit Calculation
-st.header("Summary")
+    total_sales_amount = total_amount  # Assuming this was calculated from stock & accommodation
 
-total_sales_amount = total_amount  # Assuming this was calculated from stock & accommodation
+    net_profit = (total_sales_amount + money_invested) - (total_expenses + money_paid)
+    st.markdown(f"Total Sales Amount: KES {total_sales_amount:,.2f}")
+    st.markdown(f"Net Profit: KES {net_profit:,.2f}")
 
-net_profit = (total_sales_amount + money_invested) - (total_expenses + money_paid)
-st.markdown(f"Total Sales Amount: KES {total_sales_amount:,.2f}")
-st.markdown(f"Net Profit: KES {net_profit:,.2f}")
+    #Save & Download Data
+    st.header("Save & Download Daily Report")
 
-#Save & Download Data 
-st.header("Save & Download Daily Report")
+    if st.button("Save Data"):
+        date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        folder = "daily_reports"
+        os.makedirs(folder, exist_ok=True)
 
-if st.button("Save Data"):
-    date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    folder = "daily_reports"
-    os.makedirs(folder, exist_ok=True)
+        # Save all data
+        edited_df.to_csv(f"{folder}/stock_{date_str}.csv", index=False)
+        edited_accom_df.to_csv(f"{folder}/accommodation_{date_str}.csv", index=False)
+        expenses_df.to_csv(f"{folder}/expenses_{date_str}.csv", index=False)
 
-    # Save all data
-    stock_df.to_csv(f"{folder}/stock_{date_str}.csv", index=False)
-    accom_df.to_csv(f"{folder}/accommodation_{date_str}.csv", index=False)
-    expenses_df.to_csv(f"{folder}/expenses_{date_str}.csv", index=False)
+        # Summary file
+        summary = {
+            "Total Sales": [total_sales_amount],
+            "Expenses": [total_expenses],
+            "Money Paid to Boss": [money_paid],
+            "Money Invested": [money_invested],
+            "Profit": [net_profit]
+        }
+        pd.DataFrame(summary).to_csv(f"{folder}/summary_{date_str}.csv", index=False)
 
-    # Summary file
-    summary = {
-        "Total Sales": [total_sales_amount],
-        "Expenses": [total_expenses],
-        "Money Paid to Boss": [money_paid],
-        "Money Invested": [money_invested],
-        "Profit": [net_profit]
-    }
-    pd.DataFrame(summary).to_csv(f"{folder}/summary_{date_str}.csv", index=False)
+        st.success("Data saved successfully!")
 
-    st.success("Data saved successfully!")
-
-#Download Reports 
+#Download Reports
 st.header("View & Download Past Reports")
 report_files = os.listdir("daily_reports") if os.path.exists("daily_reports") else []
 
