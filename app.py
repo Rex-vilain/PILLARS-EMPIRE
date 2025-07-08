@@ -70,7 +70,12 @@ def to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
-excel_data = to_excel(full_df)
+def to_excel(df):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Sheet1')
+    processed_data = output.getvalue()
+    return processed_data
 
   #Download button for Excel file
 st.download_button(
