@@ -215,7 +215,7 @@ edited_stock_df = st.data_editor(
 
   #Calculate Sales and Amount columns
 edited_stock_df["Sales"] = (
-[19:17, 08/07/2025] Rex: edited_stock_df["Opening Stock"] + edited_stock_df["Purchases"] - edited_stock_df["Closing Stock"]
+edited_stock_df["Opening Stock"] + edited_stock_df["Purchases"] - edited_stock_df["Closing Stock"]
 )
 edited_stock_df["Amount"] = (
     edited_stock_df["Sales"] * edited_stock_df["Selling Price"]
