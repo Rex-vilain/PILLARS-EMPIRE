@@ -54,7 +54,7 @@ edited_df["Sales"] = edited_df["Opening Stock"] + edited_df["Purchases"] - edite
 edited_df["Amount"] = edited_df["Sales"] * edited_df["Selling Price"]
 
   #Combine for full dataframe
-full_df = pd.concat([edited_df, edited_df[["Sales", "Amount"]]], axis=1)
+full_df = edited_df.copy()
 
   #Update session state
 st.session_state.df = full_df
