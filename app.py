@@ -218,7 +218,7 @@ total_lendered = edited_accom_df["Money Lendered"].sum()
 
   #Show totals below
 st.markdown(f"Total 1st Floor Rooms: {total_first_floor}")
-[14:27, 08/07/2025] Rex: st.markdown(f"Total Ground Floor Rooms: {total_ground_floor}")
+st.markdown(f"Total Ground Floor Rooms: {total_ground_floor}")
 st.markdown(f"Total Money Lendered: KES {total_lendered:,.2f}")
 
 #Expenses Entry 
