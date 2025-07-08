@@ -201,42 +201,46 @@ if app_mode == "Data Entry":
     st.markdown(f"### Total Sales Amount: KES {total_sales_amount:,.2f}")
 
     #Accommodation Data
-    st.header("Accommodation Data Entry")
+ st.header("Accommodation Data")
 
-    #Initialize or load accommodation dataframe in session state
-    if "accom_df" not in st.session_state:
-        accom_data = {
-            "1st Floor Rooms": [0]*15,
-            "Ground Floor Rooms": [0]*15,
-            "Money Lendered": [0]*15,
-            "Payment Method": ["Cash"]*15,
-        }
-        st.session_state.accom_df = pd.DataFrame(accom_data)
-    else:
-        accom_df = st.session_state.accom_df
+num_rows = 15
+today = str(date.today())
 
-    #Editable columns
-    editable_cols = ["1st Floor Rooms", "Ground Floor Rooms", "Money Lendered", "Payment Method"]
+  #Initialize session state for accommodation data per day
+if f"accom_df_{today}" not in st.session_state:
+    st.session_state[f"accom_df_{today}"] = pd.DataFrame({
+        "1st Floor Rooms": [""] * num_rows,
+        "Ground Floor Rooms": [""] * num_rows,
+        "Money Lendered": [0] * num_rows,
+        "Payment Method": ["Cash"] * num_rows
+    })
 
-    #Show editable dataframe (fixed number of rows)
-    edited_accom_df = st.data_editor(
-        st.session_state.accom_df[editable_cols],
-        num_rows="fixed",
-        use_container_width=True,
-    )
+  #Load from session state
+accom_df = st.session_state[f"accom_df_{today}"]
 
-    #Update session state with edited data
-    st.session_state.accom_df = edited_accom_df
+  #Show editable table
+edited_accom_df = st.data_editor(
+    accom_df,
+    num_rows="fixed",
+    use_container_width=True,
+    hide_index=True
+)
 
-    #Calculate totals
-    total_first_floor = edited_accom_df["1st Floor Rooms"].sum()
-    total_ground_floor = edited_accom_df["Ground Floor Rooms"].sum()
-    total_lendered = edited_accom_df["Money Lendered"].sum()
+  #Save back to session state to keep data persistent
+st.session_state[f"accom_df_{today}"] = edited_accom_df
 
-    #Show totals below
-    st.markdown(f"Total 1st Floor Rooms: {total_first_floor}")
-    st.markdown(f"Total Ground Floor Rooms: {total_ground_floor}")
-    st.markdown(f"Total Money Lendered: KES {total_lendered:,.2f}")
+  #Count non-empty room entries (non-blank strings)
+first_floor_count = edited_accom_df["1st Floor Rooms"].astype(bool).sum()
+ground_floor_count = edited_accom_df["Ground Floor Rooms"].astype(bool).sum()
+
+  #Sum money lendered
+total_lendered = edited_accom_df["Money Lendered"].sum()
+
+  #Display totals
+st.markdown(f"Total 1st Floor Rooms Used: {first_floor_count}")
+st.markdown(f"Total Ground Floor Rooms Used: {ground_floor_count}")
+st.markdown(f"Total Money Lendered: KES {total_lendered:,.2f}")
+
 
     #Expenses Entry
     st.header("Daily Expenses")
