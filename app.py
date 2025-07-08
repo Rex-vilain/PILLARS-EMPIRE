@@ -205,21 +205,29 @@ stock_df = load_section_df(date_str, "stock", default_stock_df)
 
 editable_cols = ["Item", "Opening Stock", "Purchases", "Closing Stock", "Selling Price"]
 
- #Editable stock table with only editable columns
+  #Show editable table
 edited_stock_df = st.data_editor(
     stock_df[editable_cols],
     num_rows="dynamic",
     use_container_width=True,
     key="stock_editor"
-)  # <--- Close the function call here
+)
 
-  #Calculate Sales and Amount columns
+  #Recalculate Sales and Amount
 edited_stock_df["Sales"] = (
-edited_stock_df["Opening Stock"] + edited_stock_df["Purchases"] - edited_stock_df["Closing Stock"]
+    edited_stock_df["Opening Stock"] + edited_stock_df["Purchases"] - edited_stock_df["Closing Stock"]
 )
 edited_stock_df["Amount"] = (
     edited_stock_df["Sales"] * edited_stock_df["Selling Price"]
 )
+
+  #Display full dataframe with calculated columns
+st.dataframe(edited_stock_df)
+
+  #Save button (excluding calculated columns)
+if st.button("Save Stock Data"):
+    save_section_df(date_str, "stock", edited_stock_df.drop(columns=["Sales", "Amount"]))
+    st.success("Stock data saved!")
 
  #Display full dataframe with calculated columns (read-only)
 st.dataframe(edited_stock_df)
