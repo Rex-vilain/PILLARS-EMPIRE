@@ -201,7 +201,7 @@ if app_mode == "Data Entry":
     st.markdown(f"### Total Sales Amount: KES {total_sales_amount:,.2f}")
 
     #Accommodation Data
- st.header("Accommodation Data")
+st.header("Accommodation Data")
 
 num_rows = 15
 today = str(date.today())
